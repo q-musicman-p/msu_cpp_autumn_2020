@@ -1,1 +1,1 @@
-# msu_cpp_autumn_2020
+# Technosphere deep C++

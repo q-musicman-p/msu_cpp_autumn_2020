@@ -5,30 +5,31 @@ class Allocator
 public:
     Allocator(): order(nullptr), memory(nullptr), allocation_size(0) {}
 
-    char* makeAllocator(size_t size)
+    void makeAllocator(size_t size)
     {
         if (allocation_size > 0)
         {
             std::cout << "Memory has been allocated yet!" << std::endl;
-            throw;
+            return;
         }
-
 
         memory = new char[size];
         if (!memory)
-        {
+        {   
+            // if memory had not allocated
             throw std::bad_alloc::exception();
         }
 
         order = memory;
         allocation_size = size;
-
-        return memory;
     }
 
     char* alloc(size_t size)
     {
-        if ((order - memory) + size > allocation_size) return nullptr;
+        if ((order - memory) + size > allocation_size)
+        {
+            return nullptr;
+        }
 
         char *begin = order;
         order += size;
@@ -38,6 +39,7 @@ public:
 
     void reset()
     {
+        // move order pointer to begin
         order = memory;
     }
 
@@ -46,7 +48,7 @@ public:
         delete[] memory;
     }
 private:
-    char* order;
-    char* memory;
+    char* order; //pointer to current memory block
+    char* memory; //pointer to begin memory block
     size_t allocation_size;
 };

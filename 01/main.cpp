@@ -1,15 +1,6 @@
 #include <iostream>
 #include "allocator.h"
 
-
-int main()
-{
-    
-    std::cout << "Complete!" << std::endl;
-
-    return 0;
-}
-
 void testAllocateBiggerThanMaked()
 {
     Allocator a;
@@ -47,15 +38,30 @@ void testWrittingDataInFullMemory()
     Allocator a;
     a.makeAllocator(6);
 
-    char *bloc_1_bytes = a.alloc(1);
-    for (size_t i = 0; i < 1; i ++) bloc_1_bytes[i] = i;
+    char *bloc_1 = a.alloc(1);
+    for (size_t i = 0; i < 1; i ++) bloc_1[i] = i;
 
-    char *bloc_3_bytes = a.alloc(3);
-    for (size_t i = 0; i < 3; i ++) bloc_3_bytes[i + 1] = i + 1;
+    char *bloc_2 = a.alloc(3);
+    for (size_t i = 0; i < 3; i ++) bloc_2[i] = i + 1;
 
-    char *bloc_2_bytes = a.alloc(2);
-    for (size_t i = 0; i < 2; i ++) bloc_3_bytes[i + 4] = i + 4;
+    char *bloc_3= a.alloc(2);
+    for (size_t i = 0; i < 2; i ++) bloc_3[i] = i + 4;
     
-    if ((bloc_1_bytes[0] != 0) || (bloc_3_bytes[0] != 1) || (bloc_3_bytes[1] != 2) || (bloc_3_bytes[2] != 3) ||
-        (bloc_2_bytes[0] != 4) || (bloc_2_bytes[1] != 5)) std::cout << "testWrittingDataInFullMemory had aborted" << std::endl;
+    if ((int(bloc_1[0]) != 0) || 
+        (int(bloc_2[0]) != 1) || (int(bloc_2[1]) != 2) || (int(bloc_2[2]) != 3) ||
+        (int(bloc_3[0]) != 4) || (int(bloc_3[1]) != 5)) std::cout << "testWrittingDataInFullMemory had aborted" << std::endl;
+}
+
+int main()
+{
+    //TESTS
+
+    testAllocateBiggerThanMaked();
+    testAllocateMemory();
+    testAllocateFullMemoryWithAllocManyTimes();
+    testWrittingDataInFullMemory();
+
+    std::cout << "Complete!" << std::endl;
+
+    return 0;
 }

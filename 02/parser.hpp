@@ -10,13 +10,13 @@ public:
         startCallback(defaultStartCallback),finishCallback(defaultFinishCallback),
         digitTokenCallback(defaultDigitTokenCallback), stringTokenCallback(defaultStringTokenCallback) {}
 
-    void setStartCallback(std::function<void()> f) { startCallback = f; }
+    void setStartCallback(const std::function<void()>& f) { startCallback = f; }
 
-    void setFinishCallback(std::function<void()> f) { finishCallback = f; }
+    void setFinishCallback(const std::function<void()>& f) { finishCallback = f; }
 
-    void setDigitTokenCallback(std::function<void(u_int64_t)> f) { digitTokenCallback = f; }
+    void setDigitTokenCallback(const std::function<void(u_int64_t)>& f) { digitTokenCallback = f; }
     
-    void setStringTokenCallback(std::function<void(std::string)> f) { stringTokenCallback = f; }
+    void setStringTokenCallback(const std::function<void(const std::string&)>& f) { stringTokenCallback = f; }
 
     void parse(const std::string& stringToParse) const
     {
@@ -25,7 +25,7 @@ public:
         std::string token = "";
         bool isDigitToken = true;
 
-        for(auto sym : stringToParse)
+        for(const auto& sym : stringToParse)
         {   
             // if not space symbol --> increament token
             if ((sym != ' ') && (sym != '\n') && (sym != '\t'))
@@ -58,7 +58,7 @@ private:
     std::function<void()> startCallback;
     std::function<void()> finishCallback;
     std::function<void(u_int64_t)> digitTokenCallback;
-    std::function<void(std::string)> stringTokenCallback;
+    std::function<void(const std::string&)> stringTokenCallback;
 
     static void defaultStartCallback()
     {
@@ -75,7 +75,7 @@ private:
         std::cout << "Find a digit token: " << token << '\n'; 
     }
 
-    static void defaultStringTokenCallback(std::string token)
+    static void defaultStringTokenCallback(const std::string& token)
     {
         std::cout << "Find a string token: " << token << '\n'; 
     }

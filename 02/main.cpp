@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include "parser.hpp"
 
 void testCustomCallbackFunctions()
@@ -30,7 +31,7 @@ void testWorkingWithTokens()
     tk.setStartCallback([&](){});
     tk.setFinishCallback([&](){});
     tk.setDigitTokenCallback([&](u_int64_t token){ digitSum += token; });
-    tk.setStringTokenCallback([&](std::string token){ string += token; });
+    tk.setStringTokenCallback([&](const std::string& token){ string += token; });
     
     tk.parse("1a 10\nbba2\t35 46\n578ta ke354 -231\t=123 60\n56 tra\nnse\tr3");
 
@@ -49,7 +50,7 @@ void testOnlySpaceSymbols()
     tk.setStartCallback([&](){ ++start; });
     tk.setFinishCallback([&](){ ++finish; });
     tk.setDigitTokenCallback([&](u_int64_t){ ++digit; });
-    tk.setStringTokenCallback([&](std::string){ string; });
+    tk.setStringTokenCallback([&](const std::string&){ string; });
 
     tk.parse("\n   \t \t  \n \t\t   \t\n\n\n \n");
 

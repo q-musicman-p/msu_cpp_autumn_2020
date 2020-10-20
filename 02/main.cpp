@@ -36,7 +36,7 @@ void testWorkingWithTokens()
 
     if (!((digitSum == 207) && (string == "1abba2578take354-231=123transer3")))
     {
-        std::cout << "testParser has aborted\n";
+        std::cout << "testWorkingWithTokens has aborted\n";
     }
 }
 

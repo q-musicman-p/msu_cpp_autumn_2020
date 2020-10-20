@@ -1,73 +1,69 @@
 #include <iostream>
 #include "parser.hpp"
 
-class Test
+void testCustomCallbackFunctions()
 {
-public:
-    static void testCustomCallbackFunctions()
+    TokenParser tk;
+
+    size_t start = 0, finish = 0, digit = 0, string = 0;
+
+    tk.setStartCallback([&](){ ++start; });
+    tk.setFinishCallback([&](){ ++finish; });
+    tk.setDigitTokenCallback([&](u_int64_t){ ++digit; });
+    tk.setStringTokenCallback([&](std::string){ ++string; });
+
+    tk.parse("-90\n123 nfssdf34\t4561 567 stream0 3456 23 4\t67aa\n34afgh\n234a a2245");
+
+    if (!((start == 1) && (finish == 1) && (digit == 6) && (string == 7)))
     {
-        TokenParser tk;
+        std::cout << "testCustomCallbackFunctions has aborted\n";
+    } 
+}
 
-        size_t start = 0, finish = 0, digit = 0, string = 0;
+void testWorkingWithTokens()
+{
+    TokenParser tk;
 
-        tk.setStartCallback([&](){ ++start; });
-        tk.setFinishCallback([&](){ ++finish; });
-        tk.setDigitTokenCallback([&](u_int64_t){ ++digit; });
-        tk.setStringTokenCallback([&](std::string){ ++string; });
+    std::string string = "";
+    u_int64_t digitSum = 0;
 
-        tk.parse("-90\n123 nfssdf34\t4561 567 stream0 3456 23 4\t67aa\n34afgh\n234a a2245");
+    tk.setStartCallback([&](){});
+    tk.setFinishCallback([&](){});
+    tk.setDigitTokenCallback([&](u_int64_t token){ digitSum += token; });
+    tk.setStringTokenCallback([&](std::string token){ string += token; });
+    
+    tk.parse("1a 10\nbba2\t35 46\n578ta ke354 -231\t=123 60\n56 tra\nnse\tr3");
 
-        if (!((start == 1) && (finish == 1) && (digit == 6) && (string == 7)))
-        {
-            std::cout << "testCustomCallbackFunctions has aborted\n";
-        } 
-    }
-
-    static void testWorkingWithTokens()
+    if (!((digitSum == 207) && (string == "1abba2578take354-231=123transer3")))
     {
-        TokenParser tk;
-
-        std::string string = "";
-        u_int64_t digitSum = 0;
-
-        tk.setStartCallback([&](){});
-        tk.setFinishCallback([&](){});
-        tk.setDigitTokenCallback([&](u_int64_t token){ digitSum += token; });
-        tk.setStringTokenCallback([&](std::string token){ string += token; });
-        
-        tk.parse("1a 10\nbba2\t35 46\n578ta ke354 -231\t=123 60\n56 tra\nnse\tr3");
-
-        if (!((digitSum == 207) && (string == "1abba2578take354-231=123transer3")))
-        {
-            std::cout << "testParser has aborted\n";
-        }
+        std::cout << "testParser has aborted\n";
     }
+}
 
-    static void testOnlySpaceSymbols()
+void testOnlySpaceSymbols()
+{
+    TokenParser tk;
+
+    size_t start = 0, finish = 0, digit = 0, string = 0;
+
+    tk.setStartCallback([&](){ ++start; });
+    tk.setFinishCallback([&](){ ++finish; });
+    tk.setDigitTokenCallback([&](u_int64_t){ ++digit; });
+    tk.setStringTokenCallback([&](std::string){ string; });
+
+    tk.parse("\n   \t \t  \n \t\t   \t\n\n\n \n");
+
+    if (!((start == 1) && (finish == 1) &&  (digit == 0) &&  (string == 0))) 
     {
-        TokenParser tk;
-
-        size_t start = 0, finish = 0, digit = 0, string = 0;
-
-        tk.setStartCallback([&](){ ++start; });
-        tk.setFinishCallback([&](){ ++finish; });
-        tk.setDigitTokenCallback([&](u_int64_t){ ++digit; });
-        tk.setStringTokenCallback([&](std::string){ string; });
-
-        tk.parse("\n   \t \t  \n \t\t   \t\n\n\n \n");
-
-        if (!((start == 1) && (finish == 1) &&  (digit == 0) &&  (string == 0))) 
-        {
-            std::cout << "testOnlySpaceSymbols has aborted\n";
-        }
+        std::cout << "testOnlySpaceSymbols has aborted\n";
     }
-};
+}
 
 int main()
 {
-    Test::testCustomCallbackFunctions();
-    Test::testWorkingWithTokens();
-    Test::testOnlySpaceSymbols();
+    testCustomCallbackFunctions();
+    testWorkingWithTokens();
+    testOnlySpaceSymbols();
 
     std::cout << "Comlete!" << std::endl;
     return 0;

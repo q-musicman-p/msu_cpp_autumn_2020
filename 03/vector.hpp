@@ -4,11 +4,19 @@
 class Vector
 {
 public:
-    Vector(): size(1), data(new int64_t[1]) {};
+    std::string name;
 
-    Vector(u_int16_t _size): size(_size), data(new int64_t[_size]) {};
+    Vector(): size(1), data(new int64_t[1]) {}
 
-    Vector(u_int16_t _size, int64_t* array):  size(_size), data(array) {}; // ???
+    Vector(u_int16_t _size): size(_size), data(new int64_t[_size]) {}
+
+    Vector(u_int16_t _size, int64_t* array):  size(_size), data(array) {}
+
+    Vector(const Vector& v): size(v.size) // Need test
+    {
+        data = new int64_t[v.size];
+        for (size_t i = 0; i < v.size; i++) data[i] = v.data[i];
+    }
 
     virtual ~Vector() 
     { 
@@ -17,16 +25,21 @@ public:
 
     u_int16_t getSize() const { return size; }
 
-    const Vector& operator=(const Vector& v) const
+    Vector& operator=(const Vector& v)
     {
-        return Vector(v.size, v.data);
+        std::cout << "operator=" << std::endl;
+        for (size_t i = 0; i < v.size; i++) data[i] = v.data[i];
+        size = v.size;
+
+        return *this;
     }
 
     int64_t& operator[](const size_t index) { return data[index]; }
 
     const int64_t& operator[](const size_t index) const { return data[index]; }
 
-    const Vector& operator+(const Vector& v) const
+    
+    Vector operator+(const Vector& v) const
     {
         if (size != v.size) throw "Can't sum different size's vectors!";
 
@@ -45,7 +58,7 @@ public:
         return *this;
     }
 
-    const Vector& operator*(const int64_t c) const
+    Vector operator*(const int64_t c) const
     {
         int64_t* new_data = new int64_t[size];
         for (size_t i = 0; i < size; i++) new_data[i] = data[i] * c;
@@ -79,20 +92,22 @@ public:
 
     bool operator!=(const Vector& v) const { return !operator==(v); }
 
+    friend std::ostream& operator<<(std::ostream& stream, const Vector& v);
+
 protected:
     int64_t* data;
     uint16_t size;
 };
 
-const Vector& operator*(int64_t c, const Vector& v) { return v*c; }
+Vector operator*(int64_t c, const Vector& v) { return v*c; }
 
 std::ostream& operator<<(std::ostream& stream, const Vector& v)
 {
-    for (size_t i = 0; i < v.getSize() - 1; i++)
+    for (size_t i = 0; i < v.size - 1; i++)
     {
-        stream << v[i] << " ";
+        stream << v.data[i] << " ";
     }
-    stream << v[v.getSize() - 1];
+    stream << v.data[v.size - 1];
     
     return stream;
 }

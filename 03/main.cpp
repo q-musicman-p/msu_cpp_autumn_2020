@@ -12,7 +12,7 @@ int main()
     Vector v_sum = v1 + v2;
     std::cout << "v1 + v2 = " << v_sum << '\n';
 
-    /*v_sum += v1;
+    v_sum += v1;
     std::cout << "2v1 + v2 = " << v_sum << '\n';
 
     int c1 = -1;
@@ -32,7 +32,7 @@ int main()
 
     v1[2] = 54;
     std::cout << "Now v1[2] = 54, v1 =  " << v1 << '\n';
-    std::cout << "Get v2[0]: " << v2[0];*/
+    std::cout << "Get v2[0]: " << v2[0];
 
     return 0;
 }

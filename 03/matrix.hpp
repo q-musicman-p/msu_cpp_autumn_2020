@@ -19,16 +19,18 @@ public:
         }
     }
 
-    Matrix(u_int16_t _rows, u_int16_t _columns, int64_t** _data): rows(_rows), columns(_columns), data(_data)
-    {
-        data = new int64_t*[_rows];
-        for (size_t i = 0; i < _rows; i++) data[i] = new int64_t[_columns];
+    Matrix(u_int16_t _rows, u_int16_t _columns, int64_t** _data): rows(_rows), columns(_columns), data(_data) {}
 
-        for (size_t i = 0; i < _rows; i++)
+    Matrix(const Matrix& mat): rows(mat.rows), columns(mat.columns)
+    {
+        data = new int64_t*[mat.rows];
+        for (size_t i = 0; i < mat.rows; i++) data[i] = new int64_t[mat.columns];
+        
+        for (size_t i = 0; i < mat.rows; i++)
         {
-            for (size_t j = 0; j < _columns; j++)
+            for (size_t j = 0; j < mat.columns; j++)
             {
-                data[i][j] = _data[i][j];
+                data[i][j] = mat.data[i][j];
             }
         }
     }
@@ -41,6 +43,27 @@ public:
 
     u_int16_t getRows() const { return rows; }
     u_int16_t getColumns() const { return columns; }
+
+    Matrix& operator=(const Matrix& mat)
+    {
+        if ((rows != mat.rows) || (columns != mat.columns)) 
+        {
+            throw std::out_of_range("Can't assign matrixes with different shapes!\n");
+        }
+
+        rows = mat.rows;
+        columns = mat.columns;
+        
+        for (size_t i = 0; i < mat.rows; i++)
+        {
+            for (size_t j = 0; j < mat.columns; j++)
+            {
+                data[i][j] = mat.data[i][j];
+            }
+        }
+
+        return *this;
+    }
 
     Matrix operator+(const Matrix& mat) const
     {

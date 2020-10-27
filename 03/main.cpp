@@ -15,6 +15,7 @@ void testShow()
     stream << mat;
 
     if (stream.str() != "\n1 2 3 \n4 5 6 ") std::cout << "testShow has aborted\n";
+    
 }
 
 void testCreatigEmpryMatrix()
@@ -71,6 +72,7 @@ void testOperatorMulOnNum()
     Matrix A_mul_minus_five(2, 3, arr_m);
 
     if (A != A_mul_minus_five) std::cout << "testOperatorMulOnNum has aborted\n";
+    
 }
 
 void testGets()
@@ -139,14 +141,47 @@ void testIndexOutOfRange()
     if (error_count < 2) std::cout << "testIndexOutOfRange has aborted\n";
 }
 
+void testCopyConstructor()
+{
+    int64_t** arr = new int64_t*[2];
+    arr[0] = new int64_t[3] {1, -3, 5};
+    arr[1] = new int64_t[3] {3, 1, -4};
+
+    Matrix A(2, 3, arr);
+
+    Matrix B = A;
+    
+    B[0][0] = 123;
+
+    if ((A[0][0] == B[0][0]) || (A[0][1] != B[0][1])) std::cout << "testCopyConstructor has aborted\n";
+}
+
+void testEqualsOperator()
+{
+    int64_t** arr = new int64_t*[2];
+    arr[0] = new int64_t[3] {1, -3, 5};
+    arr[1] = new int64_t[3] {3, 1, -4};
+
+    Matrix A(2, 3, arr);
+    Matrix B(2, 3);
+
+    B = A;
+    
+    B[0][0] = 123;
+
+    if ((A[0][0] == B[0][0]) || (A[0][1] != B[0][1])) std::cout << "testEqualsOperator has aborted\n";
+}
+
 int main()
 {
     // Tests
 
+    testCopyConstructor();
+    testEqualsOperator();
     testShow();
-    testCreatigEmpryMatrix();
-    testGets();
-    testIsEqual();
+    testCreatigEmpryMatrix(); 
+    testGets();  
+    testIsEqual(); 
     testOperatorPlus();
     testOperatorMulOnNum();
     testGetAndChangeElement();

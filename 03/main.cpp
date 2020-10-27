@@ -1,7 +1,44 @@
 #include <iostream>
+#include <sstream>
 #include "matrix.hpp"
 
-int main()
+void testShow()
+{
+    u_int16_t m = 2, n = 3;
+
+    int64_t** arr = new int64_t*[m];
+    arr[0] = new int64_t[n] {1, 2, 3};
+    arr[1] = new int64_t[n] {4, 5, 6};
+
+    Matrix mat(m, n, arr);
+    std::stringstream stream;
+    stream << mat;
+
+    if (stream.str() != "\n1 2 3 \n4 5 6 ") std::cout << "testShow has aborted\n";
+}
+
+void testCreatigEmpryMatrix()
+{
+    Matrix zero_mat(3, 5);
+    std::stringstream stream;
+    stream << zero_mat;
+
+    if (stream.str() != "\n0 0 0 0 0 \n0 0 0 0 0 \n0 0 0 0 0 ") std::cout << "testCreatigEmpryMatrix has aborted\n";
+}
+
+void testIsEqual()
+{
+    /*int64_t** arr = new int64_t*[2];
+    arr[0] = new int64_t[3] {1, -3, 5};
+    arr[1] = new int64_t[3] {0, 1, -4};
+
+    Matrix m1(2, 3, arr), m2(2, 3, arr);*/
+    Matrix m1(4, 5), m2(4, 5);
+
+    if ((m1 == m2) == false) std::cout << "testIsEqual has aborted\n";
+}
+
+void testOperatorPlus()
 {
     int64_t** arr1 = new int64_t*[2];
     arr1[0] = new int64_t[3] {1, 2, 3};
@@ -14,57 +51,114 @@ int main()
     Matrix A(2, 3, arr1);
     Matrix B(2, 3, arr2);
 
-    std::cout << "A = " << A << "\n";
-    std::cout << "B = " << B << "\n";
+    int64_t** sum_arr = new int64_t*[2];
+    sum_arr[0] = new int64_t[3] {2, -1, 8};
+    sum_arr[1] = new int64_t[3] {4, 6, 2};
 
-    Matrix C = A + B;
+    Matrix sum(2, 3, sum_arr);
 
-    std::cout << "C = A + B = " << C << "\n";
+    if ((A + B) != sum) std::cout << "testOperatorPlus has aborted\n";
+}
 
-    std::cout << "A[1][2] = " << A[1][2] << "\n";
-    std::cout << "A[1][2] the = 784\n";
-    A[1][2] = 784;
-    std::cout << "A[1][2] = " << A[1][2] << "\n";
+void testOperatorMulOnNum()
+{
+    int64_t** arr = new int64_t*[2];
+    arr[0] = new int64_t[3] {1, -3, 5};
+    arr[1] = new int64_t[3] {0, 1, -4};
+
+    Matrix A(2, 3, arr);
+    A *= -5;
     
-    // Three is will be tests =)
+    int64_t** arr_m = new int64_t*[2];
+    arr_m[0] = new int64_t[3] {-5, 15, -25};
+    arr_m[1] = new int64_t[3] {0, -5, 20};
 
-    /*Vector* vect1 = new Vector[3] {Vector(2), Vector(2), Vector(2)};
-    Vector* vect2 = new Vector[3] {Vector(2), Vector(2), Vector(2)}; 
+    Matrix A_mul_minus_five(2, 3, arr_m);
 
-    Matrix m1(vect1), m2(vect2);
+    if (A != A_mul_minus_five) std::cout << "testOperatorMulOnNum has aborted\n";
+}
 
-    //Matrix m3 = m1 + m2;
+void testGets()
+{
+    Matrix mat(3, 4);
 
-    delete[] vect1;
-    delete[] vect2;
+    if ((mat.getRows() != 3) || (mat.getColumns() != 4)) std::cout << "testGets has aborted\n";
+}
 
-    /*Vector v1(3, new int64_t[3] {1, 2, 3}), v2(3, new int64_t[3] {3, -4, 5});
-    std::cout << "v1 = " << v1 << "\nv2 = " << v2 << '\n';
+void testGetAndChangeElement()
+{
+    int64_t** arr = new int64_t*[2];
+    arr[0] = new int64_t[3] {1, -3, 5};
+    arr[1] = new int64_t[3] {3, 1, -4};
 
-    Vector v_sum = v1 + v2;
-    std::cout << "v1 + v2 = " << v_sum << '\n';
+    Matrix A(2, 3, arr);
 
-    v_sum += v1;
-    std::cout << "2v1 + v2 = " << v_sum << '\n';
+    A[0][2] = 999;
 
-    int c1 = -1;
-    int c2 = 2;
+    if ((A[1][0] != 3) || (A[0][2] != 999)) std::cout << "testGetAndChangeElement has aboreted\n";
+}
 
-    v1 *= 3;
-    std::cout << "v1 *= 3: " << v1 << '\n';
+void testTryToSumDiffShape()
+{
+    Matrix m1(1, 2);
+    Matrix m2(2, 1);
 
-    v1 = v1 * c1;
-    std::cout << "v1 * (-1) = " << v1 << '\n';
+    std::string error;
 
-    v2 = c2 * v2;
-    std::cout << "2 * v2 = " << v2 << '\n';
+    try
+    {
+        Matrix m3 = m1 + m2;
+    }
+    catch(const std::exception& e)
+    {
+        error = e.what();
+    }
 
-    Vector v3(3, new int64_t[3] {1, 2, 3}), v4(3, new int64_t[3] {1, 2, 3});
-    std::cout << "Test (1,2,3) == (1,2,3): " << (v3 == v4) << '\n';
+    if (error != "Can't sum matrixes with different shapes!\n") std::cout << "testTryToSumDiffShape has aborted\n";
+}
 
-    v1[2] = 54;
-    std::cout << "Now v1[2] = 54, v1 =  " << v1 << '\n';
-    std::cout << "Get v2[0]: " << v2[0];*/
+void testIndexOutOfRange()
+{
+    Matrix mat(3, 4);
+    int error_count = 0;
+
+    try
+    {
+        int64_t t = mat[0][4];
+    }
+    catch(const std::exception& e)
+    {
+        
+        error_count++;
+    }
+
+    try
+    {
+        int64_t t = mat[3][1];
+    }
+    catch(const std::exception& e)
+    {
+        error_count++;
+    }
+
+    if (error_count < 2) std::cout << "testIndexOutOfRange has aborted\n";
+}
+
+int main()
+{
+    // Tests
+
+    testShow();
+    testCreatigEmpryMatrix();
+    testGets();
+    testIsEqual();
+    testOperatorPlus();
+    testOperatorMulOnNum();
+    testGetAndChangeElement();
+    testTryToSumDiffShape();
+    testIndexOutOfRange();
+
+    std::cout << "Complete!" << std::endl;
 
     return 0;
 }

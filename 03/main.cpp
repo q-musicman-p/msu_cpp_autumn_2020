@@ -28,11 +28,6 @@ void testCreatigEmpryMatrix()
 
 void testIsEqual()
 {
-    /*int64_t** arr = new int64_t*[2];
-    arr[0] = new int64_t[3] {1, -3, 5};
-    arr[1] = new int64_t[3] {0, 1, -4};
-
-    Matrix m1(2, 3, arr), m2(2, 3, arr);*/
     Matrix m1(4, 5), m2(4, 5);
 
     if ((m1 == m2) == false) std::cout << "testIsEqual has aborted\n";

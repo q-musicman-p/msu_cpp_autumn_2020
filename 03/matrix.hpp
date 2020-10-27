@@ -118,8 +118,7 @@ private:
     class Proxy
     {
     public:
-        Proxy(size_t _row_index, u_int16_t _columns, int64_t** _data): 
-            row_index(_row_index), columns(_columns), data(_data) {}
+        Proxy(size_t _row_index, u_int16_t _columns, int64_t** _data): row_index(_row_index), columns(_columns), data(_data) {}
         
         int64_t& operator[](const size_t column_index)
         {

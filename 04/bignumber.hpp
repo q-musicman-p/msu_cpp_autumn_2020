@@ -23,13 +23,8 @@ public:
     BigNumber operator-() const;
 
     friend BigNumber operator+(const BigNumber& bn1, const BigNumber& bn2);
-    BigNumber& operator+=(const BigNumber& other);
-
     friend BigNumber operator-(const BigNumber& bn1, const BigNumber& bn2);
-    BigNumber operator-=(const BigNumber& other);
-
     friend BigNumber operator*(const BigNumber& bn1, const BigNumber& bn2);
-    BigNumber& operator*=(const BigNumber& other);
 
     friend bool operator==(const BigNumber& bn1, const BigNumber& bn2);
     friend bool operator<(const BigNumber& bn1, const BigNumber& bn2);
@@ -44,5 +39,5 @@ private:
     size_t num_length_;
     bool isNegative_ = false;
 
-    const BigNumber& normalize_();
+    BigNumber& normalize_();
 };

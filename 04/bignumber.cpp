@@ -1,8 +1,8 @@
-#include <iostream>
+#include <ostream>
 #include "bignumber.hpp"
 
-const int BigNumber::BASE = 100;
-const int BigNumber::BASE_POWER = 2;
+const int BigNumber::BASE = 100000000;
+const int BigNumber::BASE_POWER = 8;
 
 /////////////////////////////////
 ////////// CONSTRUCTORS /////////
@@ -32,36 +32,27 @@ BigNumber::BigNumber(int64_t number)
 BigNumber::BigNumber(const std::string& number)
 {
     isNegative_ = number[0] == '-';
-    //std::cout << "isNegative = " << isNegative_ << std::endl;
 
     num_length_ = (number.size() - isNegative_) / BASE_POWER + ((number.size() - isNegative_) % BASE_POWER != 0);
     digits_ = new u_int64_t[num_length_];
 
-    //std::cout << "num_len = " << num_length_ << std::endl;
-
     for (size_t i = 0; i < num_length_ - 1; i++)
     {
         digits_[i] = std::stoull(number.substr(number.size() - (i + 1)*BASE_POWER, BASE_POWER));
-        //std::cout << i+1 << " digit = " << digits_[i] << std::endl;
     }
-    digits_[num_length_ - 1] = std::stoull(number.substr(isNegative_, number.size() - (num_length_ - 1)*BASE_POWER));
-    //std::cout << "last digit = " << digits_[num_length_ - 1] << std::endl;
+    digits_[num_length_ - 1] = std::stoull(number.substr(isNegative_, number.size() - isNegative_ - (num_length_ - 1)*BASE_POWER));
 }
 
 BigNumber::BigNumber(const BigNumber& other): num_length_(other.num_length_), isNegative_(other.isNegative_)
 {
     digits_ = new u_int64_t[num_length_];
     std::copy(other.digits_, other.digits_ + num_length_, digits_);
-    /*for (size_t i = 0; i < num_length_; i++)
-    {
-        digits_[i] = other.digits_[i];
-    }*/
 }
 
 BigNumber::BigNumber(BigNumber&& other): num_length_(std::move(other.num_length_)), isNegative_(std::move(other.isNegative_))
 {
     digits_ = new(other.digits_) u_int64_t[other.num_length_];
-    
+
     other.num_length_ = 0;
     other.isNegative_ = false;
     other.digits_ = nullptr;
@@ -93,10 +84,6 @@ BigNumber& BigNumber::operator=(const BigNumber& other)
     digits_ = temp;
 
     std::copy(other.digits_, other.digits_ + other.num_length_, digits_);
-    /*for (size_t i = 0; i < other.num_length_; i++)
-    {
-        digits_[i] = other.digits_[i];
-    }*/
 
     num_length_ = other.num_length_;
     isNegative_ = other.isNegative_;
@@ -113,6 +100,7 @@ BigNumber& BigNumber::operator=(BigNumber&& other)
 
     num_length_ = std::move(other.num_length_);
     isNegative_ = std::move(other.isNegative_);
+    delete[] digits_;
     digits_ = other.digits_;
 
     other.num_length_ = 0;
@@ -136,22 +124,19 @@ BigNumber BigNumber::operator-() const
 
 BigNumber operator+(const BigNumber& bn1, const BigNumber& bn2)
 {
-    //std::cout << "operator+" << std::endl;
     if (bn1.isNegative_ != bn2.isNegative_)
     {
         return bn1.isNegative_ ? operator-(bn2, bn1.operator-()) : operator-(bn1, bn2.operator-());
     }
-    //std::cout << "similiar sign" << std::endl;
+
     // sum of 1st digits can be > BASE. Then need to add new digit
     size_t s_num_length = std::max(bn1.num_length_, bn2.num_length_) + 1;
-    u_int64_t* s_digits = new u_int64_t[s_num_length];
-    //std::cout << "no bad alloc" << std::endl;
+    u_int64_t* s_digits = new u_int64_t[s_num_length] {};
+
     for (size_t i = 0; i < s_num_length - 1; i++)
     {
-        //std::cout << "s_d = " << s_digits[i];
         if (i < bn1.num_length_) s_digits[i] += bn1.digits_[i];
         if (i < bn2.num_length_) s_digits[i] += bn2.digits_[i];
-        //std::cout << ", s_d_after = " << s_digits[i] << std::endl;
     }
 
     return BigNumber(s_digits, s_num_length, bn1.isNegative_).normalize_();
@@ -164,13 +149,13 @@ BigNumber operator-(const BigNumber& bn1, const BigNumber& bn2)
         return bn1.isNegative_ ? operator+(bn1.operator-(), bn2).operator-() : operator+(bn1, bn2.operator-());
     }
 
-    //std::cout << "b1 = " << bn1 << ", b2 = " << bn2 << std::endl;
-    //std::cout << "b1 < b2 = " << operator<(bn1, bn2) << ", b2 < b1 = " << operator>(bn2, bn1) <<   std::endl;
-    //std::cout << "Before cond" << std::endl;
-    if ((bn1.isNegative_ && operator>(bn1, bn2))) return operator-(bn2, bn1).operator-();
-    //std::cout << "After cond" << std::endl;
+    if ((bn1.isNegative_ && operator>(bn1, bn2)) || (!bn1.isNegative_ && operator<(bn1, bn2))) 
+    {
+        return operator-(bn2, bn1).operator-();
+    }
+
     size_t d_num_length = std::max(bn1.num_length_, bn2.num_length_);
-    u_int64_t* d_digits = new u_int64_t[d_num_length];
+    u_int64_t* d_digits = new u_int64_t[d_num_length] {};
 
     for (size_t i = 0; i < d_num_length; i++)
     {
@@ -203,6 +188,23 @@ BigNumber operator-(const BigNumber& bn1, const BigNumber& bn2)
     return BigNumber(d_digits, d_num_length, bn1.isNegative_).normalize_();
 }
 
+BigNumber operator*(const BigNumber& bn1, const BigNumber& bn2)
+{
+    size_t m_num_length = bn1.num_length_ + bn2.num_length_;
+    u_int64_t* m_digits = new u_int64_t[m_num_length] {};
+    bool m_isNegative = (bn1.isNegative_ && !bn2.isNegative_) || (!bn1.isNegative_ && bn2.isNegative_);
+
+    for (size_t i = 0; i < bn1.num_length_; i++)
+    {
+        for (size_t j = 0; j < bn2.num_length_; j++)
+        {
+            m_digits[i + j] += bn1.digits_[i] * bn2.digits_[j];
+        }
+    }
+     
+    return BigNumber(m_digits, m_num_length, m_isNegative).normalize_();
+}
+
 /////////////////////////////////
 /////// COMPARE OPERATORS ///////
 /////////////////////////////////
@@ -222,7 +224,6 @@ bool operator==(const BigNumber& bn1, const BigNumber& bn2)
 
 bool operator<(const BigNumber& bn1, const BigNumber& bn2)
 {
-    //std::cout << "b1_len = " << bn1.num_length_ << ", b2_len = " << bn2.num_length_ << std::endl;
     if (bn1.isNegative_ != bn2.isNegative_) return bn1.isNegative_;
     if (bn1.num_length_ != bn2.num_length_)
     {
@@ -258,9 +259,9 @@ std::ostream& operator<<(std::ostream& stream, const BigNumber& bn)
     for (size_t i = bn.num_length_; i > 0 ; i--)
     {
         std::string num = std::to_string(bn.digits_[i - 1]);
-        //std::cout << "num.size = " << num.size() << ", num = " << num << '\n';
+        
         if ((num.size() < BigNumber::BASE_POWER) && (i < bn.num_length_))
-        { 
+        {
             for (size_t j = 0; j < BigNumber::BASE_POWER - num.size(); j++) stream << "0";
         }
         stream << bn.digits_[i - 1];
@@ -273,7 +274,7 @@ std::ostream& operator<<(std::ostream& stream, const BigNumber& bn)
 //////// PRIVATE FUNCTION ///////
 /////////////////////////////////
 
-const BigNumber& BigNumber::normalize_()
+BigNumber& BigNumber::normalize_()
 {
     size_t zero_count = 0;
 
@@ -282,14 +283,10 @@ const BigNumber& BigNumber::normalize_()
         if (digits_[i] == 0) zero_count++;
         else zero_count = 0;
         
-        //std::cout << "digit" << i << " = " << digits_[i] << '\n';
         if (digits_[i] / BASE > 0)
         {
-            //std::cout << "digit" << i + 1 << " = " << digits_[i+1] << '\n';
             digits_[i + 1] += digits_[i] / BASE;
-            //std::cout << "digit" << i + 1 << " after = " << digits_[i+1] << '\n';
             digits_[i] %= BASE;
-            //std::cout << "digit" << i << " = after " << digits_[i] << '\n';
         }
     }
 

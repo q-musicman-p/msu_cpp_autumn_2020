@@ -3,7 +3,7 @@ CFLAGS = -O2 -std=c++17
 
 all: main
 
-test:
+test: main
 	./main.out
 
 main: main.cpp format.hpp

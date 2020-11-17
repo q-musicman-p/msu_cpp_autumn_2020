@@ -19,7 +19,7 @@ public:
     {
         if ((error_code < 0) || (error_code > 2))
         {
-            error_ = Error(error_code);
+            error_ = Error::UndefinedError;
         }
         else
         {

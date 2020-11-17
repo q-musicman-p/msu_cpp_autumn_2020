@@ -2,7 +2,6 @@
 
 #include <string>
 #include <sstream>
-#include <exception>
 
 
 class FormatException : public std::exception
@@ -10,14 +9,25 @@ class FormatException : public std::exception
 public:
     enum class Error
     {
-        ParametrsCountError,
-        UncorrectFormatingError,
-        UncorrectNumberInBracketsError,
+        ParametrsCountError = 0,
+        UncorrectFormatingError = 1,
+        UncorrectNumberInBracketsError = 2,
+        UndefinedError
     };
 
-    explicit FormatException(Error error): error_(error) {}
+    explicit FormatException(int error_code) 
+    {
+        if ((error_code < 0) || (error_code > 2))
+        {
+            error_ = Error(error_code);
+        }
+        else
+        {
+            error_ = Error(error_code);
+        }
+    }
 
-    const Error getError() const noexcept
+    const Error& getError() const
     {
         return error_;
     }
@@ -43,15 +53,16 @@ private:
     Error error_; 
 };
 
+int parametrs_count;
+
 template <class T, class... Args>
 std::string parse(const std::string& string, const T& head, const Args&... args);
 
 std::string parse(const std::string& string);
 
-int parametrs_count;
 
 template <class... Args>
-static std::string format(const std::string& string, const Args&... args)
+std::string format(const std::string& string, const Args&... args)
 {
     parametrs_count = sizeof...(args);
     return parse(string, args...);
@@ -70,15 +81,15 @@ std::string parse(const std::string& string, const T& head, const Args&... args)
         switch (symbol)
         {
         case '{': {
-            if (brakets_mode) throw FormatException(FormatException::Error::UncorrectFormatingError);
+            if (brakets_mode) throw FormatException(1);
             brakets_mode = true;
         }break;
         
         case '}': {
-            if (!brakets_mode) throw FormatException(FormatException::Error::UncorrectFormatingError);
+            if (!brakets_mode) throw FormatException(1);
             brakets_mode = false;
             
-            if (brakets_int.empty()) throw FormatException(FormatException::Error::UncorrectNumberInBracketsError);
+            if (brakets_int.empty()) throw FormatException(2);
             
 
             int b_int = -1;
@@ -88,11 +99,11 @@ std::string parse(const std::string& string, const T& head, const Args&... args)
             }
             catch(const std::exception& e)
             {
-                throw FormatException(FormatException::Error::UncorrectNumberInBracketsError);
+                throw FormatException(2);
             }
-            if (b_int < 0) throw FormatException(FormatException::Error::UncorrectNumberInBracketsError);
+            if (b_int < 0) throw FormatException(2);
 
-            if (b_int > parametrs_count) throw FormatException(FormatException::Error::ParametrsCountError);
+            if (b_int > parametrs_count) throw FormatException(0);
 
             if (b_int == parametrs_count - (sizeof...(args) + 1)) result << head;
             else result << '{' << brakets_int << '}';
@@ -114,7 +125,7 @@ std::string parse(const std::string& string)
 {
     for (const auto& symbol : string)
     {
-        if ((symbol == '{') || (symbol == '}')) throw FormatException(FormatException::Error::ParametrsCountError);
+        if ((symbol == '{') || (symbol == '}')) throw FormatException(0);
     }
     
     return string;

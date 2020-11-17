@@ -7,7 +7,7 @@ test: main
 	./main.out
 
 main: main.cpp format.hpp
-	$(CC) main.cpp -o main.out
+	$(CC) main.cpp format.hpp -o main.out
 
 clean:
 	rm -rf *.o main

@@ -43,16 +43,11 @@ void testFormatError2()
     }
     catch(const FormatException& e) 
     {
-        std::cout << int(e.getError());
         if (e.getError() != FormatException::Error::UncorrectFormatingError) std::cout << "testFormatError2 has aborted" << std::endl;
-    }
-    catch(...)
-    {
-        std::cout << "testFormatError2 has aborted" << std::endl;
     }
 }
 
-void testFormatError3()
+void testUnpositiveIndexError()
 {
     try
     {
@@ -60,11 +55,43 @@ void testFormatError3()
     }
     catch(const FormatException& e) 
     {
-        if (e.getError() != FormatException::Error::UncorrectFormatingError) std::cout << "testFormatError2 has aborted" << std::endl;
+        if (e.getError() != FormatException::Error::UncorrectNumberInBracketsError) std::cout << "testUnpositiveIndexError has aborted" << std::endl;
     }
-    catch(...)
+}
+
+void testInvalidNumberError()
+{
+    try
     {
-        std::cout << "testFormatError3 has aborted" << std::endl;
+        auto text = format(" error? {asd1232}", 1, 2);
+    }
+    catch(const FormatException& e) 
+    {
+        if (e.getError() != FormatException::Error::UncorrectNumberInBracketsError) std::cout << "testInvalidNumberError has aborted" << std::endl;
+    }
+}
+
+void testEmptyBrackets()
+{
+    try
+    {
+        auto text = format(" error?{1} {} {0}", 1, 2);
+    }
+    catch(const FormatException& e) 
+    {
+        if (e.getError() != FormatException::Error::UncorrectNumberInBracketsError) std::cout << "testEmptyBrackets has aborted" << std::endl;
+    }
+}
+
+void testLessParametrs()
+{
+    try
+    {
+        auto text = format(" erro{0}r? {3}", 1, 2);
+    }
+    catch(const FormatException& e) 
+    {
+        if (e.getError() != FormatException::Error::ParametrsCountError) std::cout << "testLessParametrs has aborted" << std::endl;
     }
 }
 
@@ -73,10 +100,14 @@ int main()
     testWorking1();
     testWorking2();
     testWasteParametrs();
-
     testFormatError1();
     testFormatError2();
-    testFormatError3();
+    testUnpositiveIndexError();
+    testInvalidNumberError();
+    testEmptyBrackets();
+    testLessParametrs();
+
+    std::cout << "Complete!" << std::endl;
 
     return 0;
 }

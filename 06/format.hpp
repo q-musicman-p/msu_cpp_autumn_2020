@@ -95,7 +95,7 @@ std::string parse(const std::string& string, const T& head, const Args&... args)
             int b_int = -1;
             try
             {
-                b_int = std::atoi(brakets_int.c_str());
+                b_int = std::stoi(brakets_int.c_str());
             }
             catch(const std::exception& e)
             {

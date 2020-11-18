@@ -93,31 +93,11 @@ private:
     {
         std::string text = "";
         in_ >> text;
-        if (std::is_same<T, bool>::value)
-        {
-            if (text == "true")
-            {
-                head = true;
-            }
-            else if (text == "false")
-                head = false;
-            else
-                return Error::CorruptedArchive;
-        }
-        else
-        {
-            try
-            {
-                if ((text == "true") || (text == "false")) return Error::CorruptedArchive;
-                head = std::stoull(text);
-            }
-            catch(const std::exception& e)
-            {
-                return Error::CorruptedArchive;
-            }
-        }
 
-        return process(args...);
+        const Error error = unparse(text, head);
+
+        if (error == Error::NoError) return process(args...);
+        else return error;
     }
 
     template <class T>
@@ -126,25 +106,33 @@ private:
         std::string text = "";
         in_ >> text;
 
-        if (std::is_same<T, bool&>::value)
+        return unparse(text, head);
+    }
+
+    Error unparse(const std::string& text, bool& head)
+    {
+        if (text == "true")
         {
-            if (text == "true")
-                head = true;
-            else if (text == "false")
-                head = false;
-            else
-                return Error::CorruptedArchive;
+            head = true;
         }
+        else if (text == "false")
+            head = false;
         else
+            return Error::CorruptedArchive;
+        
+        return Error::NoError;
+    }
+
+    Error unparse(const std::string& text, u_int64_t& head)
+    {
+        try
         {
-            try
-            {
-                head = std::stoull(text);
-            }
-            catch(const std::exception& e)
-            {
-                return Error::CorruptedArchive;
-            }
+            if ((text == "true") || (text == "false")) return Error::CorruptedArchive;
+            head = std::stoull(text);
+        }
+        catch(const std::exception& e)
+        {
+            return Error::CorruptedArchive;
         }
 
         return Error::NoError;

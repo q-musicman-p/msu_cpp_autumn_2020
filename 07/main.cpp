@@ -27,21 +27,29 @@ int main()
     //tests
 
     //constrTest(); //ok, but need testing with operator[]
-    //equalOperatorsTest();
+    //equalOperatorsTest(); // ?? working but not move-constr, wtf
 
 
-    /*
+    
     auto v1 = std::vector<int> {1, 2, 3, 4, 5};
+    v1.push_back(5);
 
-    auto v2 = std::vector<u_int16_t> {1, 2, 3, 4, 5};
+    std::cout << "size = " << v1.size() << "\ncapasity = " << v1.capacity() << std::endl;
+    
+    v1.reserve(7);
 
-    v2 = v1;
+    std::cout << "size = " << v1.size() << "\ncapasity = " << v1.capacity() << std::endl;
 
-    std::cout << "size = " << v.size() << "\ncapasity = " << v.capacity() << std::endl;
+    
 
-    v.push_back(6);
+    /*auto v2 = std::vector<int> {1, 2, 3, 1, 2,2};
+    v2.push_back(4);
 
-    std::cout << "size = " << v.size() << "\ncapasity = " << v.capacity() << std::endl;*/
+    std::cout << "size = " << v2.size() << "\ncapasity = " << v2.capacity() << std::endl;
+
+    v1 = v2;
+
+    std::cout << "size = " << v1.size() << "\ncapasity = " << v1.capacity() << std::endl;*/
 
     return 0;
 }

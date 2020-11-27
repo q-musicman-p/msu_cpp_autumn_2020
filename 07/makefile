@@ -7,7 +7,7 @@ test: main
 	./main.out
 
 main: main.cpp vector.hpp
-	$(CC) -o main.out
+	$(CC) main.cpp -o main.out
 
 clean:
 	rm -rf *.out main

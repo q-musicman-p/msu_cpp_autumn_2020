@@ -1,21 +1,61 @@
 #pragma once
 
 #include <iostream>
+#include <initializer_list>
 
 template <class T>
 class Vector
 {
-private:
     size_t size_;
     size_t capacity_;
     T* memory_;
 
-    class Iterator;
+    class Iterator
+    {
+        T* current_;
+        bool reversed_;
+    public:
+        explicit Iterator(T* el, bool reversed = false): current_(el), reversed_(reversed) {}
+
+        bool operator==(const Iterator& other) const 
+        {
+            if (this == &other)
+            {
+                return true;
+            }
+            
+            return  current_ == other.current_;
+        }
+
+        bool operator!=(const Iterator& other) const
+        {
+            return !operator==(other);
+        }
+
+        T& operator*() const
+        {
+            if (current_)
+                return *current_;
+            
+            throw std::out_of_range("");
+        }
+
+        void operator++()
+        {
+            if (current_)
+                if (!reversed_)
+                    current_ += 1;
+                else
+                    current_ -= 1;
+        }
+    };
+
     class Allocator;
 public:
+    Vector();
     explicit Vector(size_t size);
+    explicit Vector(const std::initializer_list<T>& list);
     Vector(size_t size, const T& default_value);
-    Vector(T* array, size_t size);
     
     Vector(const Vector& other);
     Vector(Vector&& other);
@@ -25,7 +65,11 @@ public:
     Vector& operator=(const Vector& other);
     Vector operator=(Vector&& other);
 
-    bool operator==(const Vector& other) const;
+    template <class _T>
+    friend bool operator==(const Vector<_T>& v1, const Vector<_T>& v2);
+
+    template <class _T>
+    friend bool operator!=(const Vector<_T>& v1, const Vector<_T>& v2);
 
     T& operator[](const size_t index);
     const T& operator[](const size_t index) const;
@@ -45,24 +89,14 @@ public:
 
     void clear() noexcept;
 
-    Iterator& begin() noexcept;
-    const Iterator& begin() const noexcept;
-
-    Iterator& end() noexcept;
-    const Iterator& end() const noexcept;
-
-    Iterator& rbegin() noexcept;
-    const Iterator& rbegin() const noexcept;
-
-    Iterator& rend() noexcept;
-    const Iterator& rend() const noexcept;
+    Iterator begin() noexcept;
+    Iterator end() noexcept;
+    Iterator rbegin() noexcept;
+    Iterator rend() noexcept;
 
     void resize(const size_t size);
 
     void reserve(const size_t capacity);
-private:
-    template <class... Args>
-    void emplace_split(T&& object, Args&&... args);
 };
 
 // ======================================
@@ -70,7 +104,19 @@ private:
 // ======================================
 
 template <class T>
+Vector<T>::Vector(): size_(0), capacity_(0), memory_(nullptr) {std::cout << "C_default" << std::endl;}
+
+template <class T>
 Vector<T>::Vector(size_t size): size_(size), capacity_(size), memory_(new T[size]) { std::cout << "C_size" << std::endl; }
+
+template <class T>
+Vector<T>::Vector(const std::initializer_list<T>& list): size_(list.size()), capacity_(list.size())
+{
+    std::cout << "C_inic_list" << std::endl;
+
+    memory_ = new T[capacity_];
+    std::copy(list.begin(), list.end(), memory_);
+}
 
 template <class T>
 Vector<T>::Vector(size_t size, const T& default_value): size_(size), capacity_(size), memory_(new T[size])
@@ -86,14 +132,10 @@ Vector<T>::Vector(size_t size, const T& default_value): size_(size), capacity_(s
 }
 
 template <class T>
-Vector<T>::Vector(T* array, size_t size): size_(size), capacity_(size), memory_(array) {std::cout << "C_arr" << std::endl;}
-
-template <class T>
 Vector<T>::Vector(const Vector& other): size_(other.size_), capacity_(other.capacity_), memory_(new T[other.capacity_])
 {
     std::cout << "C_copy" << std::endl;
 
-    //std::copy(other.begin(), other.end(), memory_);
     std::copy(other.memory_, other.memory_ + other.capacity_, memory_);
 }
 
@@ -168,20 +210,26 @@ Vector<T> Vector<T>::operator=(Vector&& other)
 }
 
 template <class T>
-bool Vector<T>::operator==(const Vector& other) const
+bool operator==(const Vector<T>& v1, const Vector<T>& v2)
 {
     std::cout << "operator==" << std::endl;
 
-    if (other.size_ != size_)
+    if (v1.size_ != v2.size_)
         return false;
     
-    for (size_t i = 0; i < size_; i++)
+    for (size_t i = 0; i < v1.size_; i++)
     {
-        if (memory_[i] != other.memory_[i])
+        if (v1.memory_[i] != v2.memory_[i])
             return false;
     }
     
     return true;
+}
+
+template <class T>
+bool operator!=(const Vector<T>& v1, const Vector<T>& v2)
+{
+    return !operator==(v1, v2);
 }
 
 template <class T>
@@ -221,16 +269,16 @@ bool Vector<T>::empty() const noexcept
 template <class T>
 void Vector<T>::clear() noexcept
 {
-    std::fill(memory_, memory_ + size_, T());
+    size_ = 0;
 }
 
 template <class T>
 void Vector<T>::resize(const size_t size)
 {
-    if (size > size_)
+    if (size > capacity_)
     {
-        capacity_ *= 2;
-        T* temp = new T[capacity_];
+        capacity_ = size;
+        T* temp = new T[capacity_] {};
         std::copy(memory_, memory_ + size_, temp);
 
         delete[] memory_;
@@ -258,43 +306,76 @@ void Vector<T>::reserve(const size_t capacity)
 template <class T>
 const T& Vector<T>::pop_back()
 {
-    return memory_[size_--];
+    return memory_[--size_];    
 }
 
 template <class T>
 void Vector<T>::push_back(const T& el)
 {
+    std::cout << "referense push" << std::endl;
     if (capacity_ == size_)
-        reserve(2 * capacity_);
-        
-    memory_[size_ + 1] = el;
-    size_++;
+    {
+        if (capacity_ > 0)
+            reserve(2 * capacity_);
+        else
+            reserve(1);
+    }   
+    memory_[size_++] = el;
 }
 
 template <class T>
 void Vector<T>::push_back(T&& el)
 {
+    std::cout << "rvalue push" << std::endl;
     if (capacity_ == size_)
-        reserve(2 * capacity_);
-        
-    memory_[size_ + 1] = std::move(el);
-    size_++;
+    {
+        if (capacity_ > 0)
+            reserve(2 * capacity_);
+        else
+            reserve(1);
+    }   
+    memory_[size_++] = std::move(el);
 }
     
 template <class T>
 template <class... Args>
 void Vector<T>::emplace_back(Args&&... args)
 {
-    emplace_split(args...);
+    if (capacity_ == size_)
+    {
+        if (capacity_ > 0)
+            reserve(2 * capacity_);
+        else
+            reserve(1);
+
+    }   
+    memory_[size_++] = T(args...);
+}
+
+/////////////////////
+///// ITERATORS /////
+/////////////////////
+
+template <class T>
+typename Vector<T>::Iterator Vector<T>::begin() noexcept
+{
+    return Iterator(memory_);
 }
 
 template <class T>
-template <class... Args>
-void Vector<T>::emplace_split(T&& object, Args&&... args)
+typename Vector<T>::Iterator Vector<T>::end() noexcept
 {
-    if (capacity_ == size_)
-        reserve(2 * capacity_);
-        
-    memory_[size_ + 1] = std::forward<T>(T(args...));
-    size_++;
+    return Iterator(memory_ + size_);
+}
+
+template <class T>
+typename Vector<T>::Iterator Vector<T>::rbegin() noexcept
+{
+    return Iterator(memory_ + size_ - 1, true);
+}
+
+template <class T>
+typename Vector<T>::Iterator Vector<T>::rend() noexcept
+{
+    return Iterator(memory_ - 1, true);
 }

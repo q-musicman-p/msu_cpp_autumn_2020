@@ -13,23 +13,6 @@ void show(Vector<T>& v)
     std::cout << std::endl;
 }
 
-void iteratorTest()
-{
-    Vector<double> v { 1.2, 3, 5.4, 1};
-
-    for (auto i = v.begin(); i != v.end(); ++i)
-    {
-        std::cout << *i << ' ';
-    }
-    std::cout << std::endl;
-
-    for (auto i = v.rbegin(); i != v.rend(); ++i)
-    {
-        std::cout << *i << ' ';
-    }
-    std::cout << std::endl;
-}
-
 void constrTest()
 {
     Vector<int> v1(10);
@@ -57,6 +40,23 @@ void equalOperatorsTest()
 
     v2 = std::move(v3);
     show(v2);
+}
+
+void iteratorTest()
+{
+    Vector<double> v { 1.2, 3, 5.4, 1};
+
+    for (auto i = v.begin(); i != v.end(); ++i)
+    {
+        std::cout << *i << ' ';
+    }
+    std::cout << std::endl;
+
+    for (auto i = v.rbegin(); i != v.rend(); ++i)
+    {
+        std::cout << *i << ' ';
+    }
+    std::cout << std::endl;
 }
 
 void compareOperatorTest()
@@ -179,20 +179,20 @@ void clearTest()
 
 int main()
 {
-    //tests
 
-    /*constrTest(); //ok
-    equalOperatorsTest(); // working but not use move-constr after std::move, wtf
-    iteratorTest(); //ok
-    compareOperatorTest(); //ok
-    indexOperatorTest(); // ok
-    resizeTest(); //ok
-    pushBackTest(); //ok
-    popBackTest(); //ok
-    emplaceBackTest(); //ok 
-    isEmptyTest(); //ok
-    sizeAndCapacityTest(); //ok 
-    clearTest(); //ok*/
+    // SIMPLE TESTS
+    constrTest(); 
+    equalOperatorsTest(); 
+    iteratorTest(); 
+    compareOperatorTest(); 
+    indexOperatorTest(); 
+    resizeTest(); 
+    pushBackTest(); 
+    popBackTest(); 
+    emplaceBackTest();  
+    isEmptyTest(); 
+    sizeAndCapacityTest(); 
+    clearTest(); 
 
     class Data
     {
@@ -225,29 +225,40 @@ int main()
         const std::string& name() { return name_; }
     };
 
+    /*Data x(1, "123"), y(2, "2"), z(3, "45"), r(4, "-4"), t(6, "7654");
+    
+    //Vector<Data> v1 { x, y, z }; //work
+    Vector<Data> v1(3); //work
+    //Vector<Data> v1(3, x); // work
+    Vector<Data> v2 { r, t };
+    
+    v1 == v2;*/
 
-    Data x(1, "123"), y(2, "2"), z(3, "45");
-    
-    //Vector<Data> v { x, y, z };
-    Vector<Data> v1(3, x);
-    //Vector<Data> v2 { y, z };
-    
-    Vector<Data> v3(v1);
+    //Vector<Data> v3(v1); // worl
+    //Vector<Data> v3(std::move(v1)); // worl
     //Vector<int> v { 1, 2, 3 };
-    /*
     
-    Allocator<Data> a;
-    Data* dat = a.allocate(4* sizeof(Data));
+    
+    /*Allocator<Data> a;
+    Data* dat = a.allocate(3);
     //Data* second = a.allocate(2 * sizeof(Data));
-
+    
     a.construct(dat, x);
+    a.construct(dat + 1, y);
+    a.construct(dat + 2, z);
 
-    std::cout << "size = " << dat[0].size() << ", name = " << dat[0].name() << std::endl;
+    for (size_t i = 0; i < 3; i++)
+    {
+        std::cout << "size = " << dat[i].size() << ", name = " << dat[i].name() << std::endl;
+    }
+        
     //std::cout << "size = " << second[0].size() << ", name = " << second[0].name() << std::endl;
+    for (size_t i = 0; i < 3; i++)
+    {
+        a.destroy(dat + i);
+    }    
 
-    a.destroy(dat);
-
-    a.deallocate(dat, 4);*/
+    a.deallocate(dat, 3);
     /*
     std::cout << "CONSTRUCT VECTOR" << std::endl;
     Vector<Data> v;

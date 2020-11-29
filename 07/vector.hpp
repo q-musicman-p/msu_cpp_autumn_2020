@@ -2,6 +2,42 @@
 
 #include <iostream>
 #include <initializer_list>
+#include <new>
+
+template <class T>
+class Allocator
+{
+public:
+    Allocator() {}
+    Allocator(const Allocator&) = delete;
+    Allocator(Allocator&&) = delete;
+
+    ~Allocator() {}
+
+    Allocator& operator=(const Allocator& other) = default;
+    Allocator operator=(Allocator&&) = delete;
+
+    T* allocate(const size_t size)
+    {
+        return static_cast<T*>(operator new[] (size));
+    }
+
+    void deallocate(T* obj, const size_t size)
+    {
+        operator delete[] (obj, size);
+    }
+    
+    template <class... Args>
+    void construct(T* obj, Args&&... args)
+    {
+        new (obj) T(std::forward<Args>(args)...);
+    }
+
+    void destroy(T* obj)
+    {
+        (*obj).~T();
+    }
+};
 
 template <class T>
 class Vector
@@ -9,6 +45,8 @@ class Vector
     size_t size_;
     size_t capacity_;
     T* memory_;
+
+    Allocator<T> allocator_;
 
     class Iterator
     {
@@ -50,7 +88,7 @@ class Vector
         }
     };
 
-    class Allocator;
+    
 public:
     Vector();
     explicit Vector(size_t size);
@@ -106,25 +144,48 @@ public:
 template <class T>
 Vector<T>::Vector(): size_(0), capacity_(0), memory_(nullptr) {std::cout << "C_default" << std::endl;}
 
+// T must have default constructor
 template <class T>
-Vector<T>::Vector(size_t size): size_(size), capacity_(size), memory_(new T[size]) { std::cout << "C_size" << std::endl; }
+Vector<T>::Vector(size_t size): size_(size), capacity_(size), memory_(new T[size]) 
+{ 
+    std::cout << "C_size" << std::endl; 
+}
 
 template <class T>
 Vector<T>::Vector(const std::initializer_list<T>& list): size_(list.size()), capacity_(list.size())
 {
     std::cout << "C_inic_list" << std::endl;
 
-    memory_ = new T[capacity_];
-    std::copy(list.begin(), list.end(), memory_);
+    //std::allocator<T> allocator_;
+
+    memory_ = allocator_.allocate(size_ * sizeof(T));
+    
+    size_t i = 0;
+    for (const auto& element : list)
+    {
+        allocator_.construct(memory_ + i, element);
+        i++;
+    }
+    
+    //memory_ = new T[capacity_];
+    //std::copy(list.begin(), list.end(), memory_);
+
+    std::cout << "end constr" << std::endl;
 }
 
 template <class T>
-Vector<T>::Vector(size_t size, const T& default_value): size_(size), capacity_(size), memory_(new T[size])
+Vector<T>::Vector(size_t size, const T& default_value): size_(size), capacity_(size)
 {
     std::cout << "C_size_def" << std::endl;
 
+    memory_ = allocator_.allocate(size_ * sizeof(T));
+    for (size_t i = 0; i < size_; i++)
+    {
+        allocator_.construct(memory_ + i, default_value);
+    }
+    
     //std::fill(begin(), end(), T());
-    std::fill(memory_, memory_ + size_, default_value);
+    //std::fill(memory_, memory_ + size_, default_value);
     //for (size_t i = 0; i < size; i++)
     //{
     //    memory_[i] = T();
@@ -132,11 +193,15 @@ Vector<T>::Vector(size_t size, const T& default_value): size_(size), capacity_(s
 }
 
 template <class T>
-Vector<T>::Vector(const Vector& other): size_(other.size_), capacity_(other.capacity_), memory_(new T[other.capacity_])
+Vector<T>::Vector(const Vector& other): size_(other.size_), capacity_(other.capacity_)
 {
     std::cout << "C_copy" << std::endl;
 
-    std::copy(other.memory_, other.memory_ + other.capacity_, memory_);
+    memory_ = allocator_.allocate(size_ * sizeof(T));
+    for (size_t i = 0; i < size_; i++)
+    {
+        allocator_.construct(memory_ + i, *(other.memory_ + i));
+    }
 }
 
 template <class T>
@@ -155,8 +220,8 @@ template <class T>
 Vector<T>::~Vector()
 {
     std::cout << "Destr" << std::endl;
-
-    delete[] memory_;
+    
+    //delete[] memory_;
 }
 
 // ======================================
@@ -294,8 +359,14 @@ void Vector<T>::reserve(const size_t capacity)
     if (capacity > capacity_)
     {
         T* temp = new T[capacity];
+        
         std::copy(memory_, memory_ + size_, temp);
-
+        
+        for (size_t i = 0; i < capacity_; i++)
+        {
+            memory_[i].~T();
+        }
+        
         delete[] memory_;
         memory_ = temp;
 
@@ -312,7 +383,6 @@ const T& Vector<T>::pop_back()
 template <class T>
 void Vector<T>::push_back(const T& el)
 {
-    std::cout << "referense push" << std::endl;
     if (capacity_ == size_)
     {
         if (capacity_ > 0)
@@ -326,7 +396,6 @@ void Vector<T>::push_back(const T& el)
 template <class T>
 void Vector<T>::push_back(T&& el)
 {
-    std::cout << "rvalue push" << std::endl;
     if (capacity_ == size_)
     {
         if (capacity_ > 0)
@@ -334,7 +403,7 @@ void Vector<T>::push_back(T&& el)
         else
             reserve(1);
     }   
-    memory_[size_++] = std::move(el);
+    memory_[size_++] = el;
 }
     
 template <class T>
@@ -349,7 +418,7 @@ void Vector<T>::emplace_back(Args&&... args)
             reserve(1);
 
     }   
-    memory_[size_++] = T(args...);
+    memory_[size_++] = T(std::forward<Args>(args)...);
 }
 
 /////////////////////

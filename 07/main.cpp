@@ -181,7 +181,7 @@ int main()
 {
     //tests
 
-    constrTest(); //ok
+    /*constrTest(); //ok
     equalOperatorsTest(); // working but not use move-constr after std::move, wtf
     iteratorTest(); //ok
     compareOperatorTest(); //ok
@@ -192,8 +192,73 @@ int main()
     emplaceBackTest(); //ok 
     isEmptyTest(); //ok
     sizeAndCapacityTest(); //ok 
-    clearTest(); //ok
+    clearTest(); //ok*/
+
+    class Data
+    {
+        int size_;
+        std::string name_;
+        int* memory_;
+
+    public:
+        Data(): size_(0), name_(""), memory_(nullptr) {  std::cout << "data constr def" << std::endl;  }
+        Data(int size, const std::string& name): size_(size), name_(name), memory_(new int[size])
+        {
+            std::cout << "data constr 2 par" << std::endl; 
+        }
+
+        Data(const Data& other): size_(other.size_), name_(other.name_)
+        {   
+            std::cout << "data copy constr" << std::endl; 
+
+            memory_ = new int[other.size_];
+            std::copy(other.memory_, other.memory_ + other.size_, memory_);
+        }
+
+        ~Data() 
+        { 
+            delete[] memory_;
+            std::cout << "data destr" << std::endl; 
+        }
+
+        int size() { return size_; }
+        const std::string& name() { return name_; }
+    };
+
+
+    Data x(1, "123"), y(2, "2"), z(3, "45");
     
+    //Vector<Data> v { x, y, z };
+    Vector<Data> v1(3, x);
+    //Vector<Data> v2 { y, z };
+    
+    Vector<Data> v3(v1);
+    //Vector<int> v { 1, 2, 3 };
+    /*
+    
+    Allocator<Data> a;
+    Data* dat = a.allocate(4* sizeof(Data));
+    //Data* second = a.allocate(2 * sizeof(Data));
+
+    a.construct(dat, x);
+
+    std::cout << "size = " << dat[0].size() << ", name = " << dat[0].name() << std::endl;
+    //std::cout << "size = " << second[0].size() << ", name = " << second[0].name() << std::endl;
+
+    a.destroy(dat);
+
+    a.deallocate(dat, 4);*/
+    /*
+    std::cout << "CONSTRUCT VECTOR" << std::endl;
+    Vector<Data> v;
+    std::cout << "push 1" << std::endl;
+    v.push_back(x);
+    std::cout << "push 2" << std::endl;
+    v.push_back(y);
+    std::cout << "push 3" << std::endl;
+    v.push_back(z);
+    std::cout << "EXIT" << std::endl;
+
     /*
     //auto v1 = std::vector<int> {1, 2, 3, 4, 5};
     auto vec = Vector<int> {1, 2, 3, 4, 5};

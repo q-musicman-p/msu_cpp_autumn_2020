@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <initializer_list>
 #include <new>
 
@@ -87,8 +86,6 @@ class Vector
                     current_ -= 1;
         }
     };
-
-    
 public:
     Vector();
     explicit Vector(size_t size);
@@ -115,10 +112,10 @@ public:
     void push_back(const T& el);
     void push_back(T&& el);
 
-    const T& pop_back();
+    void pop_back();
 
     template <class... Args>
-    void emplace_back(Args&&... args); //universal referense
+    void emplace_back(Args&&... args);
 
     bool empty() const noexcept;
 
@@ -142,14 +139,12 @@ public:
 // ======================================
 
 template <class T>
-Vector<T>::Vector(): size_(0), capacity_(0), memory_(nullptr) {std::cout << "C_default" << std::endl;}
+Vector<T>::Vector(): size_(0), capacity_(0), memory_(nullptr) {}
 
 // T must have default constructor
 template <class T>
 Vector<T>::Vector(size_t size): size_(size), capacity_(size)
 {
-    std::cout << "C_size" << std::endl; 
-
     memory_ = allocator_.allocate(size);
     for (size_t i = 0; i < size; i++)
     {
@@ -161,10 +156,6 @@ Vector<T>::Vector(size_t size): size_(size), capacity_(size)
 template <class T>
 Vector<T>::Vector(const std::initializer_list<T>& list): size_(list.size()), capacity_(list.size())
 {
-    std::cout << "C_inic_list" << std::endl;
-
-    //std::allocator<T> allocator_;
-
     memory_ = allocator_.allocate(size_);
     
     size_t i = 0;
@@ -173,42 +164,21 @@ Vector<T>::Vector(const std::initializer_list<T>& list): size_(list.size()), cap
         allocator_.construct(memory_ + i, element);
         i++;
     }
-    
-    //memory_ = new T[capacity_];
-    //std::copy(list.begin(), list.end(), memory_);
-
 }
 
 template <class T>
 Vector<T>::Vector(size_t size, const T& default_value): size_(size), capacity_(size)
 {
-    std::cout << "C_size_def" << std::endl;
-
     memory_ = allocator_.allocate(capacity_);
     for (size_t i = 0; i < size_; i++)
     {
         allocator_.construct(memory_ + i, default_value);
     }
-    
-    //std::fill(begin(), end(), T());
-    //std::fill(memory_, memory_ + size_, default_value);
-    //for (size_t i = 0; i < size; i++)
-    //{
-    //    memory_[i] = T();
-    //}
 }
 
 template <class T>
 Vector<T>::Vector(const Vector& other): size_(other.size_), capacity_(other.capacity_)
 {
-    std::cout << "C_copy" << std::endl;
-
-    for (size_t i = 0; i < size_; i++)
-    {
-        std::cout << other.memory_[i] << ' ';
-    }
-    std::cout << std::endl;
-
     memory_ = allocator_.allocate(other.capacity_);
     for (size_t i = 0; i < size_; i++)
     {
@@ -219,8 +189,6 @@ Vector<T>::Vector(const Vector& other): size_(other.size_), capacity_(other.capa
 template <class T>
 Vector<T>::Vector(Vector&& other): size_(other.size_), capacity_(other.capacity_), memory_(other.memory_)
 {
-    std::cout << "C_rvalue" << std::endl;
-
     other.size_ = 0;
     other.capacity_ = 0;
     other.memory_ = nullptr;
@@ -229,8 +197,6 @@ Vector<T>::Vector(Vector&& other): size_(other.size_), capacity_(other.capacity_
 template <class T>
 Vector<T>::~Vector()
 {
-    std::cout << "Destr" << std::endl;
-    
     for (size_t i = 0; i < size_; i++)
     {
         allocator_.destroy(memory_ + i);
@@ -245,8 +211,6 @@ Vector<T>::~Vector()
 template <class T>
 Vector<T>& Vector<T>::operator=(const Vector& other)
 {
-    std::cout << "copy_operator=" << std::endl;
-
     // self assign
     if ((*this).memory_ == other.memory_)
         return *this;
@@ -290,8 +254,6 @@ Vector<T>& Vector<T>::operator=(const Vector& other)
 template <class T>
 Vector<T>& Vector<T>::operator=(Vector&& other)
 {
-    std::cout << "rvalue_operator=" << std::endl;
-
     // self assign
     if ((*this).memory_ == other.memory_)
         return *this;
@@ -318,8 +280,6 @@ Vector<T>& Vector<T>::operator=(Vector&& other)
 template <class T>
 bool operator==(const Vector<T>& v1, const Vector<T>& v2)
 {
-    std::cout << "operator==" << std::endl;
-
     if (v1.size_ != v2.size_)
         return false;
     
@@ -385,27 +345,37 @@ void Vector<T>::clear() noexcept
 template <class T>
 void Vector<T>::resize(const size_t size)
 {
-    if (size > capacity_)
+    if (size > size_)
     {
-        // copy  memory_ to temp
-        T* temp = allocator_.allocate(size);
-        for (size_t i = 0; i < size; i++)
+        if (size > capacity_)
         {
-            if (i < size_)
-                allocator_.construct(temp + i, *(memory_ + i));
-            else
-                allocator_.construct(temp + i);
+            // copy  memory_ to temp
+            T* temp = allocator_.allocate(size);
+            for (size_t i = 0; i < size; i++)
+            {
+                if (i < size_)
+                    allocator_.construct(temp + i, *(memory_ + i));
+                else
+                    allocator_.construct(temp + i);
+            }
+            
+            // delete memory_
+            for (size_t i = 0; i < size_; i++)
+            {
+                allocator_.destroy(memory_ + i);
+            }
+            allocator_.deallocate(memory_ ,capacity_);
+            
+            memory_ = temp;
+            capacity_ = size;
         }
-        
-        // delete memory_
-        for (size_t i = 0; i < size_; i++)
+        else
         {
-            allocator_.destroy(memory_ + i);
+            for (size_t i = size_; i < size; i++)
+            {
+                allocator_.construct(memory_ + i);
+            }
         }
-        allocator_.deallocate(memory_ ,capacity_);
-        
-        memory_ = temp;
-        capacity_ = size;
     }
     else
     {
@@ -444,14 +414,11 @@ void Vector<T>::reserve(const size_t capacity)
 }
 
 template <class T>
-const T& Vector<T>::pop_back()
+void Vector<T>::pop_back()
 {
     size_--;
-    const T& el = memory_[size_];
 
     allocator_.destroy(memory_ + size_);
-
-    return el;
 }
 
 template <class T>

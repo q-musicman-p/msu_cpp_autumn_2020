@@ -1,62 +1,46 @@
 #include <iostream>
 #include "vector.hpp"
-#include <vector>
-
-template <class T>
-void show(Vector<T>& v)
-{
-    std::cout << "size = " << v.size() << ", capacity = " << v.capacity() << std::endl;
-    for (auto i = v.begin(); i != v.end(); ++i)
-    {
-        std::cout << *i << ' ';
-    }
-    std::cout << std::endl;
-}
-
-void constrTest()
-{
-    Vector<int> v1(10);
-    show(v1);
-
-    Vector<int> v2(10, -234);
-    show(v2);
-    
-    Vector<int> v3(v2);
-    show(v3);
-
-    Vector<int> v5 { 1, 3, 5 };
-    Vector<int> v4(std::move(v5));
-    show(v4);    
-}
-
-void equalOperatorsTest()
-{
-    Vector<double> v1 { 1.2, 3, 5.4 };
-    Vector<double> v2 { 0, -2.6, 9.24, 3, 1 };
-    Vector<double> v3 { 2, 1.566 };
-
-    v1 = v2;
-    show(v1);
-
-    v2 = std::move(v3);
-    show(v2);
-}
 
 void iteratorTest()
 {
-    Vector<double> v { 1.2, 3, 5.4, 1};
+    Vector<double> v { 1.2, 3, 5.4, 1 };
+
+    double* vec = new double[4] { 1.2, 3, 5.4, 1 };
+    double* reverse_vec = new double[4] { 1, 5.4, 3, 1.2 };
+
+    bool error = false;
+    int j = 0;
 
     for (auto i = v.begin(); i != v.end(); ++i)
     {
-        std::cout << *i << ' ';
+        if (vec[j] != *i)
+        {
+            error = true;
+            break;
+        }
+
+        j++;
     }
-    std::cout << std::endl;
+
+    bool reverse_error = false;
+    j = 0;
 
     for (auto i = v.rbegin(); i != v.rend(); ++i)
     {
-        std::cout << *i << ' ';
+        if (reverse_vec[j] != *i)
+        {
+            error = true;
+            break;
+        }
+
+        j++;
     }
-    std::cout << std::endl;
+
+    delete[] vec;
+    delete[] reverse_vec;
+
+    if (error || reverse_error)
+        std::cout << "iteratorTest has aborted" << std::endl;
 }
 
 void compareOperatorTest()
@@ -79,75 +63,6 @@ void indexOperatorTest()
         std::cout << "indexOperatorTest has aborted" << std::endl;
 }
 
-void resizeTest()
-{
-    Vector<int> v1 { 1, 2, 3, -4, 3 };
-
-    v1.resize(2);
-    size_t rs1 = v1.size();
-    size_t cp1 = v1.capacity();
-    show(v1);
-
-    v1.resize(4);
-    size_t rs2 = v1.size();
-    size_t cp2 = v1.capacity();
-    show(v1);
-
-    v1.resize(10);
-    size_t rs3 = v1.size();
-    size_t cp3 = v1.capacity();
-    show(v1);
-
-    if (!((rs1 == 2) && (cp1 == 5)) || !((rs2 == 4) && (cp1 == 5)) || !((rs3 == 10) && (cp3 == 10))) 
-        std::cout << "resizeTest has aborted" << std::endl;
-}
-
-void pushBackTest()
-{
-    Vector<int> v1 { 1, 2, 3, -4 };
-    v1.push_back(1);
-
-    int a = -123;
-    v1.push_back(a);
-
-    Vector<int> v2 { 1, 2, 3, -4, 1, -123 };
-
-    if (v1 != v2)
-        std::cout << "pushBackTest has aborted" << std::endl;
-}
-
-void popBackTest()
-{
-    Vector<double> v1 { 0, 1.2, 3, 5.3, 1.45 };
-
-    double back = v1.pop_back();
-
-    if ((back != 1.45))
-        std::cout << "popBackTest has aborted" << std::endl;
-
-}
-
-void emplaceBackTest()
-{
-    struct Data
-    {
-        int size_;
-        std::string name_;
-
-
-        Data(): size_(0), name_("") {}
-        Data(int size, const std::string& name): size_(size), name_(name) {}
-    };
-
-    Vector<Data> dat;
-    dat.emplace_back(10, "MyDatabase");
-
-
-
-    if ((dat.size() != 1) || (dat[0].size_ != 10) || (dat[0].name_ != "MyDatabase"))
-        std::cout << "testEmplaceBack has aborted" << std::endl;
-}
-
 void isEmptyTest()
 {
     Vector<int> v1;
@@ -168,144 +83,371 @@ void sizeAndCapacityTest()
         std::cout << "sizeAndCapacityTest has aborted" << std::endl;
 }
 
-void clearTest()
-{
-    Vector<int> v1 {1, 2, 3};
-    v1.clear();
+/////////////////////////////////////////////////////////////////////////////////////////
 
-    if (!v1.empty())
-        std::cout << "clearTest has aborted" << std::endl;
+static int count;
+static void counter(int code)
+{
+    switch (code)
+    {
+    case 0:
+        count = 0;
+        break;
+    case 1:
+        count++;
+        break;
+    case -1:
+        count--;
+        break;
+    default:
+        throw "count error";
+        break;
+    }
+}
+
+
+class Data
+{
+    int size_;
+    std::string name_;
+    int* memory_;
+
+public:
+    Data(): size_(0), name_(""), memory_(nullptr) 
+    {
+        counter(1);
+    }
+    Data(int size, const std::string& name): size_(size), name_(name), memory_(new int[size])
+    {
+        counter(1);
+    }
+
+    Data(const Data& other): size_(other.size_), name_(other.name_)
+    {   
+        counter(1);
+
+        memory_ = new int[other.size_];
+        std::copy(other.memory_, other.memory_ + other.size_, memory_);
+    }
+
+    ~Data() 
+    { 
+        counter(-1);
+        delete[] memory_;
+    }
+
+    int size() { return size_; }
+    const std::string& name() { return name_; }
+};
+
+void inicializerConstrHardTest()
+{
+    bool error = false;
+    // Testing zone
+    {   
+        counter(0);
+        Data x(1, "one"), y(2, "two"), z(3, "there");
+        
+        Vector<Data> v { x, y, z };
+
+        if ((v[0].name() != "one") || (v[0].size() != 1) ||
+            (v[1].name() != "two") || (v[1].size() != 2) ||
+            (v[2].name() != "there") || (v[2].size() != 3))
+                error = true;
+    }
+    
+    if ((count != 0) || error)
+        std::cout << "inicializerConstrHardTest has aborted" << std::endl;
+}
+
+void sizeConstrHardTest()
+{
+    bool error = false;
+    // Testing zone
+    {   
+        counter(0);
+        Vector<Data> v(3);
+
+        if ((v[0].name() != "") || (v[0].size() != 0) ||
+            (v[1].name() != "") || (v[1].size() != 0) ||
+            (v[2].name() != "") || (v[2].size() != 0))
+                error = true;
+    }
+    
+    if ((count != 0) || error)
+        std::cout << "sizeConstrHardTest has aborted" << std::endl;
+}
+
+void defValueConstrHardTest()
+{
+    bool error = false;
+    // Testing zone
+    {   
+        counter(0);
+
+        Data def(43, "new");
+        Vector<Data> v(3, def);
+
+        if ((v[0].name() != "new") || (v[0].size() != 43) ||
+            (v[1].name() != "new") || (v[1].size() != 43) ||
+            (v[2].name() != "new") || (v[2].size() != 43))
+                error = true;
+    }
+    
+    if ((count != 0) || error)
+        std::cout << "defValueConstrHardTest has aborted" << std::endl;
+}
+
+void copyConstrHardTest()
+{
+    bool error = false;
+    // Testing zone
+    {   
+        counter(0);
+
+        Data x(1, "one"), y(2, "two");
+        Vector<Data> v { x, y };
+        Vector<Data> v_copy = v;
+
+        if ((v[0].name() != v_copy[0].name()) || (v[0].size() != v_copy[0].size()) ||
+            (v[1].name() != v_copy[1].name()) || (v[1].size() != v_copy[1].size()))
+                error = true;
+    }
+    
+    if ((count != 0) || error)
+        std::cout << "copyConstrHardTest has aborted" << std::endl;
+}
+
+void moveConstrHardTest()
+{
+    bool error = false;
+    // Testing zone
+    {   
+        counter(0);
+
+        Data x(1, "one"), y(2, "two");
+        Vector<Data> v { x, y };
+        Vector<Data> v_move = std::move(v);
+
+        if (("one" != v_move[0].name()) || (1 != v_move[0].size()) ||
+            ("two" != v_move[1].name()) || (2 != v_move[1].size()) ||
+            (!v.empty()))
+                error = true;
+    }
+    
+    if ((count != 0) || error)
+        std::cout << "moveConstrHardTest has aborted" << std::endl;
+}
+
+void copyEqualOperatorHardTest()
+{
+    bool error = false;
+    // Testing zone
+    {   
+        counter(0);
+
+        Data x(1, "one"), y(2, "two");
+        Vector<Data> v { x, y };
+        Vector<Data> v_copy(3);
+        v_copy = v;
+
+        if ((v[0].name() != v_copy[0].name()) || (v[0].size() != v_copy[0].size()) ||
+            (v[1].name() != v_copy[1].name()) || (v[1].size() != v_copy[1].size()))
+                error = true;
+    }
+    
+    if ((count != 0) || error)
+        std::cout << "moveConstrHardTest has aborted" << std::endl;
+}
+
+void moveEqualOperatorHardTest()
+{
+    bool error = false;
+    // Testing zone
+    {   
+        counter(0);
+
+        Data x(1, "one"), y(2, "two"), z(3, "three");
+        Vector<Data> v { x, y };
+        Vector<Data> v_move { z };
+        v_move = std::move(v);
+
+        if (("one" != v_move[0].name()) || (1 != v_move[0].size()) ||
+            ("two" != v_move[1].name()) || (2 != v_move[1].size()) ||
+            (!v.empty()))
+                error = true;
+    }
+    
+    if ((count != 0) || error)
+        std::cout << "moveConstrHardTest has aborted" << std::endl;
+}
+
+void clearHardTest()
+{
+    bool error = false;
+    // Testing zone
+    {   
+        counter(0);
+
+        Data x(1, "one"), y(2, "two"), z(3, "three");
+        Vector<Data> v { x, y, z };
+        v.clear();
+
+        if (!v.empty())
+            error = true;
+    }
+
+    if ((count != 0) || error)
+        std::cout << "clearHardTest has aborted" << std::endl;
+}
+
+void resizeHardTest()
+{
+    bool error = false;
+    // Testing zone
+    {   
+        counter(0);
+
+        Data x(1, "one"), y(2, "two"), z(3, "three");
+        Vector<Data> v { x, y, z };
+
+        v.resize(1);
+        size_t rs1 = v.size();
+        size_t cp1 = v.capacity();
+
+        v.resize(2);
+        size_t rs2 = v.size();
+        size_t cp2 = v.capacity();
+
+        v.resize(4);
+        size_t rs3 = v.size();
+        size_t cp3 = v.capacity();
+
+        if (!((rs1 == 1) && (cp1 == 3)) || !((rs2 == 2) && (cp2 == 3)) || !((rs3 == 4) && (cp3 == 4)) ||
+            (v[1].name() == "two") || (v[1].size() == 2) ||
+            (v[3].name() != "") || (v[3].size() != 0))
+                error = true;
+    }
+    
+    if ((count != 0) || error)
+        std::cout << "resizeHardTest has aborted" << std::endl;
+}
+
+void reserveHardTest()
+{
+    bool error = false;
+    // Testing zone
+    {   
+        counter(0);
+
+        Data x(1, "one"), y(2, "two"), z(3, "three");
+        Vector<Data> v { x, y, z };
+
+        v.reserve(2);
+        size_t rs1 = v.size();
+        size_t cp1 = v.capacity();
+
+        v.reserve(6);
+        size_t rs2 = v.size();
+        size_t cp2 = v.capacity();
+       
+        if (!((rs1 == 3) && (cp1 == 3)) || !((rs2 == 3) && (cp2 == 6)))
+                error = true;
+    }
+    
+    if ((count != 0) || error)
+        std::cout << "reserveHardTest has aborted" << std::endl;
+}
+
+void pushBackHardTest()
+{
+    bool error = false;
+    {
+        counter(0);
+
+        Data x(1, "one"), y(2, "two"), z(3, "three");
+        Vector<Data> v { x };
+        v.push_back(y);
+
+        v.push_back(std::move(z));
+
+        if ((v[0].name() != "one") || (v[0].size() != 1) ||
+            (v[1].name() != "two") || (v[1].size() != 2) ||
+            (v[2].name() != "three") || (v[2].size() != 3) ||
+            (v.size() != 3) || (v.capacity() != 4))
+                error = true;
+    }
+
+    if ((count != 0) || error)
+        std::cout << "pushBackHardTest has aborted" << std::endl;
+}
+
+void popBackHardTest()
+{
+    bool error = false;
+    {
+        counter(0);
+
+        Data x(1, "one"), y(2, "two"), z(3, "three");
+        Vector<Data> v { x, y, z };
+        v.pop_back();
+
+        if ((v.size() != 2) || (v.capacity() != 3))
+                error = true;
+    }
+
+    
+
+    if ((count != 0) || error)
+        std::cout << "pushBackHardTest has aborted" << std::endl;
+
+}
+
+void emplaceBackHardTest()
+{
+    bool error = false;
+    {
+        counter(0);
+
+        Data x(1, "one"), y(2, "two");
+        Vector<Data> v { x, y };
+
+        v.emplace_back(3, "three");
+
+        if ((v[2].name() != "three") || (v[2].size() != 3) ||
+            (v.size() != 3) || (v.capacity() != 4))
+                error = true;
+    }
+
+    if ((count != 0) || error)
+        std::cout << "emplaceBackTest has aborted" << std::endl;
 }
 
 int main()
 {
-
     // SIMPLE TESTS
-    constrTest(); 
-    equalOperatorsTest(); 
     iteratorTest(); 
     compareOperatorTest(); 
     indexOperatorTest(); 
-    resizeTest(); 
-    pushBackTest(); 
-    popBackTest(); 
-    emplaceBackTest();  
     isEmptyTest(); 
     sizeAndCapacityTest(); 
-    clearTest(); 
 
-    class Data
-    {
-        int size_;
-        std::string name_;
-        int* memory_;
+    //HARD TESTS
+    inicializerConstrHardTest();
+    sizeConstrHardTest();
+    defValueConstrHardTest();
+    copyConstrHardTest();
+    moveConstrHardTest();
+    copyEqualOperatorHardTest();
+    moveEqualOperatorHardTest();
+    clearHardTest();
+    resizeHardTest();
+    reserveHardTest();
+    pushBackHardTest();
+    popBackHardTest();
+    emplaceBackHardTest();//*/
 
-    public:
-        Data(): size_(0), name_(""), memory_(nullptr) {  std::cout << "data constr def" << std::endl;  }
-        Data(int size, const std::string& name): size_(size), name_(name), memory_(new int[size])
-        {
-            std::cout << "data constr 2 par" << std::endl; 
-        }
-
-        Data(const Data& other): size_(other.size_), name_(other.name_)
-        {   
-            std::cout << "data copy constr" << std::endl; 
-
-            memory_ = new int[other.size_];
-            std::copy(other.memory_, other.memory_ + other.size_, memory_);
-        }
-
-        ~Data() 
-        { 
-            delete[] memory_;
-            std::cout << "data destr" << std::endl; 
-        }
-
-        int size() { return size_; }
-        const std::string& name() { return name_; }
-    };
-
-    /*Data x(1, "123"), y(2, "2"), z(3, "45"), r(4, "-4"), t(6, "7654");
-    
-    //Vector<Data> v1 { x, y, z }; //work
-    Vector<Data> v1(3); //work
-    //Vector<Data> v1(3, x); // work
-    Vector<Data> v2 { r, t };
-    
-    v1 == v2;*/
-
-    //Vector<Data> v3(v1); // worl
-    //Vector<Data> v3(std::move(v1)); // worl
-    //Vector<int> v { 1, 2, 3 };
-    
-    
-    /*Allocator<Data> a;
-    Data* dat = a.allocate(3);
-    //Data* second = a.allocate(2 * sizeof(Data));
-    
-    a.construct(dat, x);
-    a.construct(dat + 1, y);
-    a.construct(dat + 2, z);
-
-    for (size_t i = 0; i < 3; i++)
-    {
-        std::cout << "size = " << dat[i].size() << ", name = " << dat[i].name() << std::endl;
-    }
-        
-    //std::cout << "size = " << second[0].size() << ", name = " << second[0].name() << std::endl;
-    for (size_t i = 0; i < 3; i++)
-    {
-        a.destroy(dat + i);
-    }    
-
-    a.deallocate(dat, 3);
-    /*
-    std::cout << "CONSTRUCT VECTOR" << std::endl;
-    Vector<Data> v;
-    std::cout << "push 1" << std::endl;
-    v.push_back(x);
-    std::cout << "push 2" << std::endl;
-    v.push_back(y);
-    std::cout << "push 3" << std::endl;
-    v.push_back(z);
-    std::cout << "EXIT" << std::endl;
-
-    /*
-    //auto v1 = std::vector<int> {1, 2, 3, 4, 5};
-    auto vec = Vector<int> {1, 2, 3, 4, 5};
-
-    //auto vec = Vector<int>(new int[5] {1, 2, 3, 4, 5}, 5) NOW
-    std::vector<int> v1;
-    std::cout << v1.size() << ' ' << v1.capacity() << std::endl;
-
-    std::cout << v1.size() << ' ' << v1.capacity() << std::endl;
-
-    /*v1.resize(4);
-    std::cout << v1.size() << ' ' << v1.capacity() << std::endl;
-
-    v1.resize(10);
-    std::cout << v1.size() << ' ' << v1.capacity() << std::endl;
-    
-
-    for (auto i = v1.begin(); i != v1.end(); ++i)
-    {
-        std::cout << *i << " ";
-    }
-
-    /*std::cout << "size = " << v1.size() << "\ncapasity = " << v1.capacity() << std::endl;
-
-    std::cout << "size = " << v1.size() << "\ncapasity = " << v1.capacity() << std::endl;*/
-
-    
-
-    /*auto v2 = std::vector<int> {1, 2, 3, 1, 2,2};
-    v2.push_back(4);
-
-    std::cout << "size = " << v2.size() << "\ncapasity = " << v2.capacity() << std::endl;
-
-    v1 = v2;
-
-    std::cout << "size = " << v1.size() << "\ncapasity = " << v1.capacity() << std::endl;*/
+    std::cout << "Complete!" << std::endl;
 
     return 0;
 }

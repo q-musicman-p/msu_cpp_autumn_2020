@@ -354,12 +354,12 @@ void Vector<T>::resize(const size_t size)
             for (size_t i = 0; i < size; i++)
             {
                 if (i < size_)
-                    allocator_.construct(temp + i, *(memory_ + i));
+                    allocator_.construct(temp + i, std::move(*(memory_ + i)));
                 else
                     allocator_.construct(temp + i);
             }
-            
-            // delete memory_
+        
+            // if T hasnot move constructor, we should free memory
             for (size_t i = 0; i < size_; i++)
             {
                 allocator_.destroy(memory_ + i);
@@ -396,12 +396,14 @@ void Vector<T>::reserve(const size_t capacity)
     {
         T* temp = allocator_.allocate(capacity);
         
+        
         // copy
         for (size_t i = 0; i < size_; i++)
         {
-            allocator_.construct(temp + i, *(memory_ + i));
+            allocator_.construct(temp + i, std::move(*(memory_ + i)));
         }
         
+        // if T hasnot move constructor, we should free memory
         for (size_t i = 0; i < size_; i++)
         {
             allocator_.destroy(memory_ + i);
@@ -464,7 +466,7 @@ void Vector<T>::emplace_back(Args&&... args)
 
     }
 
-    allocator_.construct(memory_ + size_, args...);
+    allocator_.construct(memory_ + size_, std::forward<Args>(args)...);
     size_++;
 }
 

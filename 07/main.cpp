@@ -105,7 +105,6 @@ static void counter(int code)
     }
 }
 
-
 class Data
 {
     int size_;
@@ -128,6 +127,15 @@ public:
 
         memory_ = new int[other.size_];
         std::copy(other.memory_, other.memory_ + other.size_, memory_);
+    }
+
+    Data(Data&& other): size_(std::move(other.size_)), name_(std::move(other.name_)), memory_(other.memory_)
+    {
+        counter(1);
+        
+        other.size_ = 0;
+        other.name_ = "";
+        other.memory_ = nullptr;
     }
 
     ~Data() 

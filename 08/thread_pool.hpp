@@ -16,7 +16,7 @@ class ThreadPool
     std::mutex event_;
     bool stopExecuting_;
 public:
-    explicit ThreadPool(size_t poolSize);
+    explicit ThreadPool(size_t poolSize  = std::thread::hardware_concurrency());
 
     ~ThreadPool();
 
@@ -25,14 +25,14 @@ public:
     auto exec(Func func, Args... args) -> std::future<decltype(func(args...))>;
 };
 
-ThreadPool::ThreadPool(size_t poolSize = std::thread::hardware_concurrency()): stopExecuting_(false)
+ThreadPool::ThreadPool(size_t poolSize): stopExecuting_(false)
 {
     pool_.reserve(poolSize);
 
     for (size_t i = 0; i < poolSize; i++)
     {
         pool_.emplace_back(
-        [=]
+        [&]
         {
             for (;;)
             {
@@ -40,7 +40,7 @@ ThreadPool::ThreadPool(size_t poolSize = std::thread::hardware_concurrency()): s
 
                 {
                     std::unique_lock<std::mutex> lock(event_);
-                    sleeping_.wait(lock, [=] { return !taskQueue_.empty() || stopExecuting_; } );
+                    sleeping_.wait(lock, [&] { return !taskQueue_.empty() || stopExecuting_; } );
 
                     if (stopExecuting_)
                         break;
